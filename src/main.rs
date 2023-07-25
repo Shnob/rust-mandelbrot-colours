@@ -1,4 +1,4 @@
-use image::{ImageBuffer, ImageResult, Rgb, RgbImage};
+use image::{ImageBuffer, Rgb, RgbImage};
 use std::{env, path::Path};
 
 fn main() {
@@ -18,7 +18,10 @@ fn generate_mandelbrot(image: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, max: u32) {
 
     for x in 0..image.width() {
         for y in 0..image.height() {
-            let pos = (x as f64 * scale - 2., y as f64 * scale - 2.);
+            let pos = (
+                (x as i32 - image.width() as i32 / 2) as f64 * scale,
+                (y as i32 - image.height() as i32 / 2) as f64 * scale,
+            );
             let val = calc_val(pos, max);
 
             if val == max {
@@ -31,18 +34,23 @@ fn generate_mandelbrot(image: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, max: u32) {
 }
 
 fn gen_col(val: u32, max: u32) -> Rgb<u8> {
-    const R_DESC: (f64, f64, f64) = (0.5, 64., 255.);
-    const G_DESC: (f64, f64, f64) = (0.5, 0., 0.);
-    const B_DESC: (f64, f64, f64) = (0.5, 64., 255.);
+    let val_i32 = val as i32;
+    const VIEW_MOD: i32 = 20;
+    const COL_OFFSET: f64 = -3.29;
+    const COL_SPACE_FAC: f64 = 2.;
 
-    let r = ((val as f64 * R_DESC.0).cos() + 1.) * (R_DESC.2 - R_DESC.1) + R_DESC.1;
+    let col =
+        (val_i32 % VIEW_MOD) as f64 / VIEW_MOD as f64 * std::f64::consts::PI * 2. + COL_OFFSET;
 
-    let g = ((val as f64 * G_DESC.0).cos() + 1.) * (G_DESC.2 - G_DESC.1) + G_DESC.1;
-    let g = 32.;
-
-    let b = ((val as f64 * B_DESC.0).sin() + 1.) * (B_DESC.2 - B_DESC.1) + B_DESC.1;
-
-    Rgb([r as u8, g as u8, b as u8])
+    if val < max {
+        Rgb([
+            ((col.sin() * 0.5 + 0.5) * 255.) as u8,
+            (((col * COL_SPACE_FAC).sin() / 2. + 0.5) * 255.) as u8,
+            ((col.cos() * 0.5 + 0.5) * 255.) as u8,
+        ])
+    } else {
+        Rgb([0, 0, 0])
+    }
 }
 
 fn calc_val(c: (f64, f64), max: u32) -> u32 {
