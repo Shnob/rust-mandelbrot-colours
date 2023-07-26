@@ -1,6 +1,17 @@
 use image::{ImageBuffer, Rgb, RgbImage};
 use std::{env, path::Path};
 
+const COLOURS: [(u8, u8, u8); 4] = [
+    // Purple
+    (159, 2, 209),
+    // Yellow
+    (234, 253, 0),
+    // Cyan
+    (0, 200, 167),
+    // Orange
+    (255, 116, 0),
+];
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let res: (u32, u32) = (args[1].parse().unwrap(), args[2].parse().unwrap());
@@ -34,20 +45,17 @@ fn generate_mandelbrot(image: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, max: u32) {
 }
 
 fn gen_col(val: u32, max: u32) -> Rgb<u8> {
-    let val_i32 = val as i32;
-    const VIEW_MOD: i32 = 20;
-    const COL_OFFSET: f64 = -3.29;
-    const COL_SPACE_FAC: f64 = 2.;
-
-    let col =
-        (val_i32 % VIEW_MOD) as f64 / VIEW_MOD as f64 * std::f64::consts::PI * 2. + COL_OFFSET;
+    const SCL: f64 = 0.1;
 
     if val < max {
-        Rgb([
-            ((col.sin() * 0.5 + 0.5) * 255.) as u8,
-            (((col * COL_SPACE_FAC).sin() / 2. + 0.5) * 255.) as u8,
-            ((col.cos() * 0.5 + 0.5) * 255.) as u8,
-        ])
+        let t = (val as f64 * SCL).rem_euclid(COLOURS.len() as f64);
+
+        let col_a = COLOURS[t as usize];
+        let col_b = COLOURS[t.ceil() as usize % COLOURS.len()];
+
+        let col = lerp_col(col_a, col_b, t.fract());
+
+        Rgb([col.0, col.1, col.2])
     } else {
         Rgb([0, 0, 0])
     }
@@ -57,11 +65,10 @@ fn calc_val(c: (f64, f64), max: u32) -> u32 {
     let mut z = (0., 0.);
 
     for m in 0..max {
+        z = (z.0 * z.0 - z.1 * z.1 + c.0, 2. * z.0 * z.1 + c.1);
         if z.0 * z.0 + z.1 * z.1 > 4. {
             return m;
         }
-
-        z = (z.0 * z.0 - z.1 * z.1 + c.0, 2. * z.0 * z.1 + c.1);
     }
 
     max
@@ -80,4 +87,12 @@ fn save_image(image: ImageBuffer<Rgb<u8>, Vec<u8>>) {
     image
         .save(format!("images/{n}.png"))
         .expect("Failed to save image");
+}
+
+fn lerp_col(a: (u8, u8, u8), b: (u8, u8, u8), t: f64) -> (u8, u8, u8) {
+    (
+        (a.0 as f64 * (1. - t) + b.0 as f64 * t) as u8,
+        (a.1 as f64 * (1. - t) + b.1 as f64 * t) as u8,
+        (a.2 as f64 * (1. - t) + b.2 as f64 * t) as u8,
+    )
 }
