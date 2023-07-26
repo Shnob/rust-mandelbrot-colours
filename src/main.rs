@@ -1,5 +1,5 @@
 use image::{ImageBuffer, Rgb, RgbImage};
-use std::{env, path::Path};
+use std::{env, path::Path, time::Instant};
 
 //const COLOURS: [(u8, u8, u8); 4] = [
 //    // Purple
@@ -31,7 +31,14 @@ fn main() {
 
     let mut final_image = RgbImage::new(res.0, res.1);
 
+    let start_time = Instant::now();
+
     generate_mandelbrot(&mut final_image, max, target, zoom);
+
+    let time_taken = start_time.elapsed();
+    let time_taken = time_taken.as_secs_f64();
+
+    println!("Time taken: {time_taken}s");
 
     save_image(final_image);
 }
