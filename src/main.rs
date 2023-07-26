@@ -12,23 +12,23 @@ use std::{env, path::Path, time::Instant};
 //    (255, 116, 0),
 //];
 
-//const COLOURS: [(u8, u8, u8); 3] = [
-//    // Deep blue
-//    (0, 33, 166),
-//    // Pink
-//    (250, 83, 252),
-//    // White
-//    (255, 255, 255),
-//];
-
 const COLOURS: [(u8, u8, u8); 3] = [
-    // Yellow
-    (252, 252, 83),
+    // Deep blue
+    (0, 33, 166),
     // Pink
     (250, 83, 252),
-    // Pale cyan
-    (153, 255, 245),
+    // White
+    (255, 255, 255),
 ];
+
+//const COLOURS: [(u8, u8, u8); 3] = [
+//    // Yellow
+//    (252, 252, 83),
+//    // Pink
+//    (250, 83, 252),
+//    // Pale cyan
+//    (153, 255, 245),
+//];
 
 //const COLOURS: [(u8, u8, u8); 3] = [
 //    // Yellow
@@ -38,6 +38,8 @@ const COLOURS: [(u8, u8, u8); 3] = [
 //    // Cyan
 //    (52, 82, 201),
 //];
+
+//const COLOURS: [(u8, u8, u8); 2] = [(0, 0, 0), (255, 255, 255)];
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -54,24 +56,33 @@ fn main() {
     // The Flower
     //let target = (-1.99998588117, 0.);
     //let zoom = (2 as f64).powf(32.8);
+    //const JULIA: Option<(f64, f64)> = None;
 
     // Fluttershy Spiral
-    //let target = (-0.745628552, -0.166292177);
-    //let zoom = (2 as f64).powf(18.);
+    let target = (-0.745628552, 0.166292177);
+    let zoom = (2 as f64).powf(18.);
+    const JULIA: Option<(f64, f64)> = None;
 
     // The Star
     //let target = (-1.94498538, 0.);
     //let zoom = (2 as f64).powf(19.9);
+    //const JULIA: Option<(f64, f64)> = None;
 
     // Void Spiral
-    let target = (-0.7765927806, 0.1366408558);
-    let zoom = (2 as f64).powf(29.9);
+    //let target = (-0.7765927806, -0.1366408558);
+    //let zoom = (2 as f64).powf(29.9);
+    //const JULIA: Option<(f64, f64)> = None;
+
+    // Void Spial julia
+    //let target = (0., 0.);
+    //let zoom = (2 as f64).powf(1.);
+    //const JULIA: Option<(f64, f64)> = Some((-0.7765927806, 0.1366408558));
 
     let mut rendered_image = RgbImage::new(res.0 * sampling, res.1 * sampling);
 
     let start_time = Instant::now();
 
-    generate_mandelbrot(&mut rendered_image, max, target, zoom);
+    generate_mandelbrot(&mut rendered_image, max, target, zoom, JULIA);
 
     let time_taken = start_time.elapsed();
     let time_taken = time_taken.as_secs_f64();
@@ -107,6 +118,7 @@ fn generate_mandelbrot(
     max: u64,
     target: (f64, f64),
     zoom: f64,
+    julia: Option<(f64, f64)>,
 ) {
     let scale = 4. / image.width().min(image.height()) as f64 / zoom;
 
@@ -114,9 +126,13 @@ fn generate_mandelbrot(
         for y in 0..image.height() {
             let pos = (
                 (x as i32 - image.width() as i32 / 2) as f64 * scale + target.0,
-                (y as i32 - image.height() as i32 / 2) as f64 * scale - target.1,
+                (y as i32 - image.height() as i32 / 2) as f64 * scale + target.1,
             );
-            let val = calc_val(pos, max);
+
+            let val = match julia {
+                Some(c) => calc_val_julia(pos, c, max),
+                None => calc_val(pos, max),
+            };
 
             if val == max {
                 image.put_pixel(x, y, Rgb([0, 0, 0]));
@@ -147,6 +163,17 @@ fn gen_col(val: u64, max: u64) -> Rgb<u8> {
 fn calc_val(c: (f64, f64), max: u64) -> u64 {
     let mut z = (0., 0.);
 
+    for m in 0..max {
+        z = (z.0 * z.0 - z.1 * z.1 + c.0, 2. * z.0 * z.1 + c.1);
+        if z.0 * z.0 + z.1 * z.1 > 4. {
+            return m;
+        }
+    }
+
+    max
+}
+
+fn calc_val_julia(mut z: (f64, f64), c: (f64, f64), max: u64) -> u64 {
     for m in 0..max {
         z = (z.0 * z.0 - z.1 * z.1 + c.0, 2. * z.0 * z.1 + c.1);
         if z.0 * z.0 + z.1 * z.1 > 4. {
