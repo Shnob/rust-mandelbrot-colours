@@ -1,21 +1,30 @@
 use image::{ImageBuffer, Rgb, RgbImage};
 use std::{env, path::Path};
 
-const COLOURS: [(u8, u8, u8); 4] = [
-    // Purple
-    (159, 2, 209),
-    // Yellow
-    (234, 253, 0),
-    // Cyan
-    (0, 200, 167),
-    // Orange
-    (255, 116, 0),
+//const COLOURS: [(u8, u8, u8); 4] = [
+//    // Purple
+//    (159, 2, 209),
+//    // Yellow
+//    (234, 253, 0),
+//    // Cyan
+//    (0, 200, 167),
+//    // Orange
+//    (255, 116, 0),
+//];
+
+const COLOURS: [(u8, u8, u8); 3] = [
+    // Deep blue
+    (0, 33, 166),
+    // Pink
+    (250, 83, 252),
+    // White
+    (255, 255, 255),
 ];
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let res: (u32, u32) = (args[1].parse().unwrap(), args[2].parse().unwrap());
-    let max: u32 = args[3].parse().unwrap();
+    let res: (u64, u64) = (args[1].parse().unwrap(), args[2].parse().unwrap());
+    let max: u64 = args[3].parse().unwrap();
 
     let mut final_image = RgbImage::new(res.0, res.1);
 
@@ -24,7 +33,7 @@ fn main() {
     save_image(final_image);
 }
 
-fn generate_mandelbrot(image: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, max: u32) {
+fn generate_mandelbrot(image: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, max: u64) {
     let scale = 4. / image.width().min(image.height()) as f64;
 
     for x in 0..image.width() {
@@ -44,7 +53,7 @@ fn generate_mandelbrot(image: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, max: u32) {
     }
 }
 
-fn gen_col(val: u32, max: u32) -> Rgb<u8> {
+fn gen_col(val: u64, max: u64) -> Rgb<u8> {
     const SCL: f64 = 0.1;
 
     if val < max {
@@ -61,7 +70,7 @@ fn gen_col(val: u32, max: u32) -> Rgb<u8> {
     }
 }
 
-fn calc_val(c: (f64, f64), max: u32) -> u32 {
+fn calc_val(c: (f64, f64), max: u64) -> u64 {
     let mut z = (0., 0.);
 
     for m in 0..max {
