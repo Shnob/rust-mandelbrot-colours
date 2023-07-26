@@ -23,24 +23,32 @@ const COLOURS: [(u8, u8, u8); 3] = [
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let res: (u64, u64) = (args[1].parse().unwrap(), args[2].parse().unwrap());
+    let res: (u32, u32) = (args[1].parse().unwrap(), args[2].parse().unwrap());
     let max: u64 = args[3].parse().unwrap();
+
+    let target = (-1.99998588117, 0.);
+    let zoom = (2 as f64).powf(32.8);
 
     let mut final_image = RgbImage::new(res.0, res.1);
 
-    generate_mandelbrot(&mut final_image, max);
+    generate_mandelbrot(&mut final_image, max, target, zoom);
 
     save_image(final_image);
 }
 
-fn generate_mandelbrot(image: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, max: u64) {
-    let scale = 4. / image.width().min(image.height()) as f64;
+fn generate_mandelbrot(
+    image: &mut ImageBuffer<Rgb<u8>, Vec<u8>>,
+    max: u64,
+    target: (f64, f64),
+    zoom: f64,
+) {
+    let scale = 4. / image.width().min(image.height()) as f64 / zoom;
 
     for x in 0..image.width() {
         for y in 0..image.height() {
             let pos = (
-                (x as i32 - image.width() as i32 / 2) as f64 * scale,
-                (y as i32 - image.height() as i32 / 2) as f64 * scale,
+                (x as i32 - image.width() as i32 / 2) as f64 * scale + target.0,
+                (y as i32 - image.height() as i32 / 2) as f64 * scale - target.1,
             );
             let val = calc_val(pos, max);
 
