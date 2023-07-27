@@ -1,4 +1,5 @@
 use image::{ImageBuffer, Rgb, RgbImage};
+use little_exif::{exif_tag::ExifTag, metadata::Metadata};
 use std::{
     env,
     path::Path,
@@ -145,7 +146,7 @@ fn main() {
         }
     }
 
-    save_image(final_image);
+    save_image(final_image, target, zoom, JULIA, &COLOURS);
 }
 
 fn generate_mandelbrot(
@@ -231,7 +232,13 @@ fn calc_val_julia(mut z: (f64, f64), c: (f64, f64), max: u64) -> u64 {
     max
 }
 
-fn save_image(image: ImageBuffer<Rgb<u8>, Vec<u8>>) {
+fn save_image(
+    image: ImageBuffer<Rgb<u8>, Vec<u8>>,
+    pos: (f64, f64),
+    zoom: f64,
+    julia: Option<(f64, f64)>,
+    colours: &[(u8, u8, u8)],
+) {
     let mut n = 0;
 
     'free_file_search: loop {
@@ -241,9 +248,60 @@ fn save_image(image: ImageBuffer<Rgb<u8>, Vec<u8>>) {
         }
     }
 
-    image
-        .save(format!("images/{n}.png"))
-        .expect("Failed to save image");
+    let file_path = format!("images/{n}.png");
+
+    image.save(&file_path).expect("Failed to save image");
+
+    let mut metadata = Metadata::new();
+
+    metadata.set_tag(ExifTag::ImageDescription(generate_metadata(
+        pos, zoom, julia, colours,
+    )));
+
+    metadata
+        .write_to_file(Path::new(&file_path))
+        .expect("Unable to write metadata to file");
+}
+
+fn generate_metadata(
+    pos: (f64, f64),
+    zoom: f64,
+    julia: Option<(f64, f64)>,
+    colours: &[(u8, u8, u8)],
+) -> String {
+    let x = pos.0;
+    let y = pos.1;
+
+    let julia_text = match julia {
+        None => "n/a".into(),
+        Some(julia) => {
+            let x = julia.0;
+            let y = julia.1;
+            format!("{x} + {y}i")
+        }
+    };
+
+    let colours_text = {
+        let mut text = String::new();
+
+        for colour in colours {
+            let r = colour.0;
+            let g = colour.1;
+            let b = colour.2;
+
+            text = format!("{text}\n\t{r}, {g}, {b}");
+        }
+
+        text
+    };
+
+    format!(
+        "Target: {x} + {y}i
+zoom: {zoom}
+julia: {julia_text}
+colours: {colours_text}"
+    )
+    .into()
 }
 
 fn lerp_col(a: (u8, u8, u8), b: (u8, u8, u8), t: f64) -> (u8, u8, u8) {
