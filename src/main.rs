@@ -8,17 +8,6 @@ use std::{
     time::Instant,
 };
 
-//const COLOURS: [(u8, u8, u8); 4] = [
-//    // Purple
-//    (159, 2, 209),
-//    // Yellow
-//    (234, 253, 0),
-//    // Cyan
-//    (0, 200, 167),
-//    // Orange
-//    (255, 116, 0),
-//];
-
 const COLOURS: [(u8, u8, u8); 3] = [
     // Deep blue
     (0, 33, 166),
@@ -27,35 +16,6 @@ const COLOURS: [(u8, u8, u8); 3] = [
     // White
     (255, 255, 255),
 ];
-
-//const COLOURS: [(u8, u8, u8); 3] = [
-//    // Deep blue
-//    (0, 0, 128),
-//    // Yellow
-//    (255, 255, 0),
-//    // White
-//    (255, 255, 255),
-//];
-
-//const COLOURS: [(u8, u8, u8); 3] = [
-//    // Yellow
-//    (252, 252, 83),
-//    // Pink
-//    (250, 83, 252),
-//    // Pale cyan
-//    (153, 255, 245),
-//];
-
-//const COLOURS: [(u8, u8, u8); 3] = [
-//    // Yellow
-//    (252, 252, 83),
-//    // Purple
-//    (127, 40, 250),
-//    // Cyan
-//    (52, 82, 201),
-//];
-
-//const COLOURS: [(u8, u8, u8); 2] = [(0, 0, 0), (255, 255, 255)];
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -69,45 +29,9 @@ fn main() {
         1
     });
 
-    // The Flower
-    //let target = (-1.99998588117, 0.);
-    //let zoom = (2 as f64).powf(32.8);
-    //const JULIA: Option<(f64, f64)> = None;
-
-    // Fluttershy Spiral
-    //let target = (-0.745628552, 0.166292177);
-    //let zoom = (2 as f64).powf(18.);
-    //const JULIA: Option<(f64, f64)> = None;
-
-    // The Star
-    //let target = (-1.94498538, 0.);
-    //let zoom = (2 as f64).powf(19.9);
-    //const JULIA: Option<(f64, f64)> = None;
-
-    // Void Spiral
-    //let target = (-0.7765927806, -0.1366408558);
-    //let zoom = (2 as f64).powf(29.9);
-    //const JULIA: Option<(f64, f64)> = None;
-
-    // Void Spial julia
     let target = (0., 0.);
     let zoom = (2 as f64).powf(1.);
     const JULIA: Option<(f64, f64)> = Some((-0.7765927806, 0.1366408558));
-
-    // No zoom
-    //let target = (0., 0.);
-    //let zoom = 1.;
-    //const JULIA: Option<(f64, f64)> = None;
-
-    // The Cross
-    //let target = (-0.9943837, 0.2997867);
-    //let zoom = (2 as f64).powf(21.);
-    //const JULIA: Option<(f64, f64)> = None;
-
-    // Unnamed
-    //let target = (-0.73932556, 0.149640242);
-    //let zoom = (2 as f64).powf(15.5);
-    //const JULIA: Option<(f64, f64)> = None;
 
     let rendered_image_am = Arc::new(Mutex::new(RgbImage::new(
         res.0 * sampling,
