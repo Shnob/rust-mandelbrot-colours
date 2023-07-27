@@ -22,6 +22,15 @@ const COLOURS: [(u8, u8, u8); 3] = [
 ];
 
 //const COLOURS: [(u8, u8, u8); 3] = [
+//    // Deep blue
+//    (0, 0, 128),
+//    // Yellow
+//    (255, 255, 0),
+//    // White
+//    (255, 255, 255),
+//];
+
+//const COLOURS: [(u8, u8, u8); 3] = [
 //    // Yellow
 //    (252, 252, 83),
 //    // Pink
@@ -59,9 +68,9 @@ fn main() {
     //const JULIA: Option<(f64, f64)> = None;
 
     // Fluttershy Spiral
-    let target = (-0.745628552, 0.166292177);
-    let zoom = (2 as f64).powf(18.);
-    const JULIA: Option<(f64, f64)> = None;
+    //let target = (-0.745628552, 0.166292177);
+    //let zoom = (2 as f64).powf(18.);
+    //const JULIA: Option<(f64, f64)> = None;
 
     // The Star
     //let target = (-1.94498538, 0.);
@@ -77,6 +86,21 @@ fn main() {
     //let target = (0., 0.);
     //let zoom = (2 as f64).powf(1.);
     //const JULIA: Option<(f64, f64)> = Some((-0.7765927806, 0.1366408558));
+
+    // No zoom
+    //let target = (0., 0.);
+    //let zoom = 1.;
+    //const JULIA: Option<(f64, f64)> = None;
+
+    // The Cross
+    //let target = (-0.9943837, 0.2997867);
+    //let zoom = (2 as f64).powf(21.);
+    //const JULIA: Option<(f64, f64)> = None;
+
+    // Unnamed
+    let target = (-0.73932556, 0.149640242);
+    let zoom = (2 as f64).powf(15.);
+    const JULIA: Option<(f64, f64)> = None;
 
     let mut rendered_image = RgbImage::new(res.0 * sampling, res.1 * sampling);
 
