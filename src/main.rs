@@ -90,9 +90,9 @@ fn main() {
     //const JULIA: Option<(f64, f64)> = None;
 
     // Void Spial julia
-    //let target = (0., 0.);
-    //let zoom = (2 as f64).powf(1.);
-    //const JULIA: Option<(f64, f64)> = Some((-0.7765927806, 0.1366408558));
+    let target = (0., 0.);
+    let zoom = (2 as f64).powf(1.);
+    const JULIA: Option<(f64, f64)> = Some((-0.7765927806, 0.1366408558));
 
     // No zoom
     //let target = (0., 0.);
@@ -105,9 +105,9 @@ fn main() {
     //const JULIA: Option<(f64, f64)> = None;
 
     // Unnamed
-    let target = (-0.73932556, 0.149640242);
-    let zoom = (2 as f64).powf(15.5);
-    const JULIA: Option<(f64, f64)> = None;
+    //let target = (-0.73932556, 0.149640242);
+    //let zoom = (2 as f64).powf(15.5);
+    //const JULIA: Option<(f64, f64)> = None;
 
     let rendered_image_am = Arc::new(Mutex::new(RgbImage::new(
         res.0 * sampling,
@@ -146,7 +146,7 @@ fn main() {
         }
     }
 
-    save_image(final_image, target, zoom, JULIA, &COLOURS);
+    save_image(final_image, target, zoom, JULIA, &COLOURS, max, sampling);
 }
 
 fn generate_mandelbrot(
@@ -238,6 +238,8 @@ fn save_image(
     zoom: f64,
     julia: Option<(f64, f64)>,
     colours: &[(u8, u8, u8)],
+    max: u64,
+    sampling: u32,
 ) {
     let mut n = 0;
 
@@ -255,7 +257,7 @@ fn save_image(
     let mut metadata = Metadata::new();
 
     metadata.set_tag(ExifTag::ImageDescription(generate_metadata(
-        pos, zoom, julia, colours,
+        pos, zoom, julia, colours, max, sampling,
     )));
 
     metadata
@@ -268,6 +270,8 @@ fn generate_metadata(
     zoom: f64,
     julia: Option<(f64, f64)>,
     colours: &[(u8, u8, u8)],
+    max: u64,
+    sampling: u32,
 ) -> String {
     let x = pos.0;
     let y = pos.1;
@@ -299,7 +303,9 @@ fn generate_metadata(
         "Target: {x} + {y}i
 zoom: {zoom}
 julia: {julia_text}
-colours: {colours_text}"
+colours: {colours_text}
+max: {max}
+sampling: {sampling}"
     )
     .into()
 }
