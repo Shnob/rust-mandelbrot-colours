@@ -1,5 +1,11 @@
 use image::{ImageBuffer, Rgb, RgbImage};
-use std::{env, path::Path, time::Instant};
+use std::{
+    env,
+    path::Path,
+    sync::{Arc, Mutex},
+    thread,
+    time::Instant,
+};
 
 //const COLOURS: [(u8, u8, u8); 4] = [
 //    // Purple
@@ -99,19 +105,24 @@ fn main() {
 
     // Unnamed
     let target = (-0.73932556, 0.149640242);
-    let zoom = (2 as f64).powf(15.);
+    let zoom = (2 as f64).powf(15.5);
     const JULIA: Option<(f64, f64)> = None;
 
-    let mut rendered_image = RgbImage::new(res.0 * sampling, res.1 * sampling);
+    let rendered_image_am = Arc::new(Mutex::new(RgbImage::new(
+        res.0 * sampling,
+        res.1 * sampling,
+    )));
 
     let start_time = Instant::now();
 
-    generate_mandelbrot(&mut rendered_image, max, target, zoom, JULIA);
+    generate_mandelbrot(Arc::clone(&rendered_image_am), max, target, zoom, JULIA);
 
     let time_taken = start_time.elapsed();
     let time_taken = time_taken.as_secs_f64();
 
     println!("Time taken: {time_taken}s");
+
+    let rendered_image = rendered_image_am.lock().unwrap();
 
     let mut final_image = RgbImage::new(res.0, res.1);
 
@@ -138,32 +149,44 @@ fn main() {
 }
 
 fn generate_mandelbrot(
-    image: &mut ImageBuffer<Rgb<u8>, Vec<u8>>,
+    image: Arc<Mutex<ImageBuffer<Rgb<u8>, Vec<u8>>>>,
     max: u64,
     target: (f64, f64),
     zoom: f64,
     julia: Option<(f64, f64)>,
 ) {
-    let scale = 4. / image.width().min(image.height()) as f64 / zoom;
+    let wid = image.lock().unwrap().width();
+    let hit = image.lock().unwrap().height();
+    let scale = 4. / wid.min(hit) as f64 / zoom;
 
-    for x in 0..image.width() {
-        for y in 0..image.height() {
-            let pos = (
-                (x as i32 - image.width() as i32 / 2) as f64 * scale + target.0,
-                (y as i32 - image.height() as i32 / 2) as f64 * scale + target.1,
-            );
+    let mut threads = vec![];
 
-            let val = match julia {
-                Some(c) => calc_val_julia(pos, c, max),
-                None => calc_val(pos, max),
-            };
+    for x in 0..wid {
+        let image = Arc::clone(&image);
 
-            if val == max {
-                image.put_pixel(x, y, Rgb([0, 0, 0]));
-            } else {
-                image.put_pixel(x, y, gen_col(val, max));
+        threads.push(thread::spawn(move || {
+            for y in 0..hit {
+                let pos = (
+                    (x as i32 - wid as i32 / 2) as f64 * scale + target.0,
+                    (y as i32 - hit as i32 / 2) as f64 * scale + target.1,
+                );
+
+                let val = match julia {
+                    Some(c) => calc_val_julia(pos, c, max),
+                    None => calc_val(pos, max),
+                };
+
+                if val == max {
+                    image.lock().unwrap().put_pixel(x, y, Rgb([0, 0, 0]));
+                } else {
+                    image.lock().unwrap().put_pixel(x, y, gen_col(val, max));
+                }
             }
-        }
+        }));
+    }
+
+    for thread in threads {
+        thread.join().unwrap();
     }
 }
 
