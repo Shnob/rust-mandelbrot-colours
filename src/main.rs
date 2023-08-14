@@ -29,8 +29,8 @@ fn main() {
         1
     });
 
-    let target = (-0.7765927806, 0.1366408558);
-    let zoom = (2 as f64).powf(22.);
+    let target = (0., 0.);
+    let zoom = (2 as f64).powf(0.);
     const JULIA: Option<(f64, f64)> = None;
 
     let rendered_image_am = Arc::new(Mutex::new(RgbImage::new(
@@ -124,7 +124,7 @@ fn generate_mandelbrot(
 }
 
 fn gen_col(val: f64) -> Rgb<u8> {
-    const SCL: f64 = 0.05;
+    const SCL: f64 = 1.0;
 
     let t = (val as f64 * SCL).rem_euclid(COLOURS.len() as f64);
 
@@ -138,11 +138,18 @@ fn gen_col(val: f64) -> Rgb<u8> {
 
 fn calc_val(c: (f64, f64), max: u64) -> CalcValue {
     let mut z = (0., 0.);
+    let mut dz = (1., 0.);
 
     for m in 0..max {
         z = (z.0 * z.0 - z.1 * z.1 + c.0, 2. * z.0 * z.1 + c.1);
+        dz = (
+            2. * z.0 * dz.0 - 2. * z.1 * dz.1 + 1.,
+            2. * z.0 * dz.1 + 2. * z.1 * dz.0,
+        );
         if z.0 * z.0 + z.1 * z.1 > 4. {
-            return CalcValue::Outside(m as f64 + 1.0 - (z.0 * z.0 + z.1 * z.1).sqrt().log2().ln());
+            let z_abs = f64::sqrt(z.0 * z.0 + z.1 * z.1);
+            let dz_abs = f64::sqrt(dz.0 * dz.0 + dz.1 * dz.1);
+            return CalcValue::Outside((z_abs * f64::ln(z_abs)) / dz_abs);
         }
     }
 
@@ -153,7 +160,7 @@ fn calc_val_julia(mut z: (f64, f64), c: (f64, f64), max: u64) -> CalcValue {
     for m in 0..max {
         z = (z.0 * z.0 - z.1 * z.1 + c.0, 2. * z.0 * z.1 + c.1);
         if z.0 * z.0 + z.1 * z.1 > 4. {
-            return CalcValue::Outside(m as f64 - ((z.0 * z.0 + z.1 * z.1).sqrt().ln() / f64::ln(2.0)).ln());
+            return CalcValue::Outside(m as f64);
         }
     }
 
