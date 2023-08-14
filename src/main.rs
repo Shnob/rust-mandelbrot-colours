@@ -29,9 +29,9 @@ fn main() {
         1
     });
 
-    let target = (0., 0.);
-    let zoom = (2 as f64).powf(1.);
-    const JULIA: Option<(f64, f64)> = Some((-0.7765927806, 0.1366408558));
+    let target = (-0.7765927806, 0.1366408558);
+    let zoom = (2 as f64).powf(22.);
+    const JULIA: Option<(f64, f64)> = None;
 
     let rendered_image_am = Arc::new(Mutex::new(RgbImage::new(
         res.0 * sampling,
@@ -73,6 +73,11 @@ fn main() {
     save_image(final_image, target, zoom, JULIA, &COLOURS, max, sampling);
 }
 
+enum CalcValue {
+    Inside,
+    Outside(f64),
+}
+
 fn generate_mandelbrot(
     image: Arc<Mutex<ImageBuffer<Rgb<u8>, Vec<u8>>>>,
     max: u64,
@@ -101,10 +106,13 @@ fn generate_mandelbrot(
                     None => calc_val(pos, max),
                 };
 
-                if val == max {
-                    image.lock().unwrap().put_pixel(x, y, Rgb([0, 0, 0]));
-                } else {
-                    image.lock().unwrap().put_pixel(x, y, gen_col(val, max));
+                match val {
+                    CalcValue::Inside => {
+                        image.lock().unwrap().put_pixel(x, y, Rgb([0, 0, 0]));
+                    }
+                    CalcValue::Outside(val) => {
+                        image.lock().unwrap().put_pixel(x, y, gen_col(val));
+                    }
                 }
             }
         }));
@@ -115,45 +123,41 @@ fn generate_mandelbrot(
     }
 }
 
-fn gen_col(val: u64, max: u64) -> Rgb<u8> {
-    const SCL: f64 = 0.1;
+fn gen_col(val: f64) -> Rgb<u8> {
+    const SCL: f64 = 0.05;
 
-    if val < max {
-        let t = (val as f64 * SCL).rem_euclid(COLOURS.len() as f64);
+    let t = (val as f64 * SCL).rem_euclid(COLOURS.len() as f64);
 
-        let col_a = COLOURS[t as usize];
-        let col_b = COLOURS[t.ceil() as usize % COLOURS.len()];
+    let col_a = COLOURS[t as usize];
+    let col_b = COLOURS[t.ceil() as usize % COLOURS.len()];
 
-        let col = lerp_col(col_a, col_b, t.fract());
+    let col = lerp_col(col_a, col_b, t.fract());
 
-        Rgb([col.0, col.1, col.2])
-    } else {
-        Rgb([0, 0, 0])
-    }
+    Rgb([col.0, col.1, col.2])
 }
 
-fn calc_val(c: (f64, f64), max: u64) -> u64 {
+fn calc_val(c: (f64, f64), max: u64) -> CalcValue {
     let mut z = (0., 0.);
 
     for m in 0..max {
         z = (z.0 * z.0 - z.1 * z.1 + c.0, 2. * z.0 * z.1 + c.1);
         if z.0 * z.0 + z.1 * z.1 > 4. {
-            return m;
+            return CalcValue::Outside(m as f64 + 1.0 - (z.0 * z.0 + z.1 * z.1).sqrt().log2().ln());
         }
     }
 
-    max
+    CalcValue::Inside
 }
 
-fn calc_val_julia(mut z: (f64, f64), c: (f64, f64), max: u64) -> u64 {
+fn calc_val_julia(mut z: (f64, f64), c: (f64, f64), max: u64) -> CalcValue {
     for m in 0..max {
         z = (z.0 * z.0 - z.1 * z.1 + c.0, 2. * z.0 * z.1 + c.1);
         if z.0 * z.0 + z.1 * z.1 > 4. {
-            return m;
+            return CalcValue::Outside(m as f64 - ((z.0 * z.0 + z.1 * z.1).sqrt().ln() / f64::ln(2.0)).ln());
         }
     }
 
-    max
+    CalcValue::Inside
 }
 
 fn save_image(
