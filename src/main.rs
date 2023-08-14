@@ -20,7 +20,7 @@ const COLOURS: [(u8, u8, u8); 3] = [
 const SMOOTH: bool = true;
 // This value is the value at which a point is considered outside the set.
 // Higher values take longer, but provide better smoothing.
-const B: f64 = 100.;
+const B: f64 = 1000.;
 // Dimentions of the equation, should be 2 for mandelbrot set.
 // This stuff is from https://iquilezles.org/articles/msetsmooth/
 const D: f64 = 2.;
@@ -37,9 +37,10 @@ fn main() {
         1
     });
 
-    let target = (0., 0.);
-    let zoom = (2 as f64).powf(0.);
-    const JULIA: Option<(f64, f64)> = Some((-0.7765927806, 0.1366408558));
+    // Void Spiral
+    let target = (-0.7765927806, -0.1366408558);
+    let zoom = (2 as f64).powf(29.9);
+    const JULIA: Option<(f64, f64)> = None;
 
     let rendered_image_am = Arc::new(Mutex::new(RgbImage::new(
         res.0 * sampling,
@@ -132,7 +133,7 @@ fn generate_mandelbrot(
 }
 
 fn gen_col(val: f64) -> Rgb<u8> {
-    const SCL: f64 = 1.0;
+    const SCL: f64 = 0.1;
 
     let t = (val as f64 * SCL).rem_euclid(COLOURS.len() as f64);
 
