@@ -17,6 +17,14 @@ const COLOURS: [(u8, u8, u8); 3] = [
     (255, 255, 255),
 ];
 
+const SMOOTH: bool = true;
+// This value is the value at which a point is considered outside the set.
+// Higher values take longer, but provide better smoothing.
+const B: f64 = 100.;
+// Dimentions of the equation, should be 2 for mandelbrot set.
+// This stuff is from https://iquilezles.org/articles/msetsmooth/
+const D: f64 = 2.;
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let res: (u32, u32) = (args[1].parse().unwrap(), args[2].parse().unwrap());
@@ -31,7 +39,7 @@ fn main() {
 
     let target = (0., 0.);
     let zoom = (2 as f64).powf(0.);
-    const JULIA: Option<(f64, f64)> = None;
+    const JULIA: Option<(f64, f64)> = Some((-0.7765927806, 0.1366408558));
 
     let rendered_image_am = Arc::new(Mutex::new(RgbImage::new(
         res.0 * sampling,
@@ -138,18 +146,20 @@ fn gen_col(val: f64) -> Rgb<u8> {
 
 fn calc_val(c: (f64, f64), max: u64) -> CalcValue {
     let mut z = (0., 0.);
-    let mut dz = (1., 0.);
 
     for m in 0..max {
         z = (z.0 * z.0 - z.1 * z.1 + c.0, 2. * z.0 * z.1 + c.1);
-        dz = (
-            2. * z.0 * dz.0 - 2. * z.1 * dz.1 + 1.,
-            2. * z.0 * dz.1 + 2. * z.1 * dz.0,
-        );
-        if z.0 * z.0 + z.1 * z.1 > 4. {
-            let z_abs = f64::sqrt(z.0 * z.0 + z.1 * z.1);
-            let dz_abs = f64::sqrt(dz.0 * dz.0 + dz.1 * dz.1);
-            return CalcValue::Outside((z_abs * f64::ln(z_abs)) / dz_abs);
+        if z.0 * z.0 + z.1 * z.1 > B * B {
+            match SMOOTH {
+                true => {
+                    let z_abs = f64::sqrt(z.0 * z.0 + z.1 * z.1);
+                    let val = m as f64 - ((z_abs.ln() / B.ln()).ln()) / f64::ln(D);
+                    return CalcValue::Outside(val);
+                }
+                false => {
+                    return CalcValue::Outside(m as f64);
+                }
+            }
         }
     }
 
@@ -159,8 +169,17 @@ fn calc_val(c: (f64, f64), max: u64) -> CalcValue {
 fn calc_val_julia(mut z: (f64, f64), c: (f64, f64), max: u64) -> CalcValue {
     for m in 0..max {
         z = (z.0 * z.0 - z.1 * z.1 + c.0, 2. * z.0 * z.1 + c.1);
-        if z.0 * z.0 + z.1 * z.1 > 4. {
-            return CalcValue::Outside(m as f64);
+        if z.0 * z.0 + z.1 * z.1 > B * B {
+            match SMOOTH {
+                true => {
+                    let z_abs = f64::sqrt(z.0 * z.0 + z.1 * z.1);
+                    let val = m as f64 - ((z_abs.ln() / B.ln()).ln()) / f64::ln(D);
+                    return CalcValue::Outside(val);
+                }
+                false => {
+                    return CalcValue::Outside(m as f64);
+                }
+            }
         }
     }
 
